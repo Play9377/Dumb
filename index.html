@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿巴加密解密工具 | 2025年12月29日</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: var(--light-color);
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--accent-color);
+        }
+        .header h1 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+        .date {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            font-size: 16px;
+            font-family: inherit;
+            margin-bottom: 15px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            flex-grow: 1;
+        }
+        .btn-encrypt {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-decrypt {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .btn-copy {
+            background-color: var(--accent-color);
+            color: var(--dark-color);
+        }
+        .btn-clear {
+            background-color: #f44336;
+            color: white;
+        }
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .instructions {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+            border-left: 4px solid var(--accent-color);
+        }
+        .instructions h3 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+        @media (max-width: 600px) {
+            .button-group {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>阿巴加密解密工具</h1>
+        <div class="date">2025年12月29日 星期一</div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h2>输入区</h2>
+            <textarea id="inputText" placeholder="在此输入要加密的普通文本或要解密的阿巴代码..."></textarea>
+            
+            <div class="button-group">
+                <button class="btn-encrypt" id="encryptBtn">加密 → 阿巴</button>
+                <button class="btn-decrypt" id="decryptBtn">解密 ← 阿巴</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>输出区</h2>
+            <textarea id="outputText" readonly placeholder="加密或解密结果将显示在这里..."></textarea>
+            
+            <div class="button-group">
+                <button class="btn-copy" id="copyOutput">复制结果</button>
+                <button class="btn-clear" id="clearBtn">清空所有</button>
+            </div>
+            
+            <div class="stats">
+                <div id="charCount">字符数: 0</div>
+                <div id="binaryLength">二进制长度: 0</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>使用说明</h3>
+            <p><strong>加密：</strong>在输入区输入普通文本，点击"加密"按钮转换为阿巴代码。</p>
+            <p><strong>解密：</strong>在输入区输入阿巴代码，点击"解密"按钮还原为原始文本。</p>
+            <p><strong>特点：</strong>每个中文字符会被转换为16位二进制，0=阿，1=巴，兼容所有Unicode字符。</p>
+            <p>工具完全在浏览器中运行，不会上传您的任何数据。</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
+            const encryptBtn = document.getElementById('encryptBtn');
+            const decryptBtn = document.getElementById('decryptBtn');
+            const copyOutput = document.getElementById('copyOutput');
+            const clearBtn = document.getElementById('clearBtn');
+            const charCount = document.getElementById('charCount');
+            const binaryLength = document.getElementById('binaryLength');
+            
+            // 加密函数
+            function encrypt(text) {
+                let binaryStr = '';
+                for (let i = 0; i < text.length; i++) {
+                    // 获取字符的Unicode编码并转换为16位二进制
+                    const charCode = text.charCodeAt(i);
+                    binaryStr += charCode.toString(2).padStart(16, '0');
+                }
+                // 替换0为阿，1为巴
+                return binaryStr.replace(/0/g, '阿').replace(/1/g, '巴');
+            }
+            
+            // 解密函数
+            function decrypt(abaStr) {
+                // 验证输入是否只包含阿和巴
+                if (!/^[阿巴]*$/.test(abaStr)) {
+                    return '❌ 错误：解密内容只能包含"阿"和"巴"';
+                }
+                
+                // 转换为二进制
+                const binaryStr = abaStr.replace(/阿/g, '0').replace(/巴/g, '1');
+                
+                // 检查长度是否为16的倍数
+                if (binaryStr.length % 16 !== 0) {
+                    return '❌ 错误：阿巴代码长度不正确，必须为16的倍数';
+                }
+                
+                let result = '';
+                try {
+                    // 每16位转换为一个字符
+                    for (let i = 0; i < binaryStr.length; i += 16) {
+                        const binaryChar = binaryStr.substr(i, 16);
+                        const charCode = parseInt(binaryChar, 2);
+                        if (isNaN(charCode)) {
+                            throw new Error('无效的二进制数据');
+                        }
+                        result += String.fromCharCode(charCode);
+                    }
+                    return result;
+                } catch (e) {
+                    return `❌ 错误：解码失败 - ${e.message}`;
+                }
+            }
+            
+            // 更新统计信息
+            function updateStats(text, isBinary = false) {
+                const count = text.length;
+                charCount.textContent = isBinary 
+                    ? `阿巴字符数: ${count}` 
+                    : `字符数: ${count}`;
+                
+                binaryLength.textContent = isBinary
+                    ? `二进制位: ${count}`
+                    : `二进制位: ${count * 16}`;
+            }
+            
+            // 加密按钮事件
+            encryptBtn.addEventListener('click', function() {
+                const text = inputText.value.trim();
+                if (!text) {
+                    outputText.value = '请输入要加密的文本';
+                    return;
+                }
+                
+                const encrypted = encrypt(text);
+                outputText.value = encrypted;
+                updateStats(encrypted, true);
+                
+                // 自动滚动到结果
+                outputText.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // 解密按钮事件
+            decryptBtn.addEventListener('click', function() {
+                const text = inputText.value.trim();
+                if (!text) {
+                    outputText.value = '请输入要解密的阿巴代码';
+                    return;
+                }
+                
+                const decrypted = decrypt(text);
+                outputText.value = decrypted;
+                
+                if (!decrypted.startsWith('❌')) {
+                    updateStats(decrypted);
+                }
+                
+                outputText.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // 复制结果
+            copyOutput.addEventListener('click', function() {
+                if (!outputText.value) {
+                    alert('没有可复制的内容');
+                    return;
+                }
+                
+                outputText.select();
+                document.execCommand('copy');
+                
+                // 显示复制成功反馈
+                const originalText = copyOutput.textContent;
+                copyOutput.textContent = '✔ 已复制';
+                setTimeout(() => {
+                    copyOutput.textContent = originalText;
+                }, 2000);
+            });
+            
+            // 清空按钮
+            clearBtn.addEventListener('click', function() {
+                inputText.value = '';
+                outputText.value = '';
+                charCount.textContent = '字符数: 0';
+                binaryLength.textContent = '二进制位: 0';
+            });
+            
+            // 输入时更新统计
+            inputText.addEventListener('input', function() {
+                updateStats(inputText.value);
+            });
+            
+            // 初始化
+            updateStats('');
+        });
+    </script>
+</body>
+</html>
